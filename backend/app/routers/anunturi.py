@@ -3,10 +3,15 @@ from sqlalchemy.orm import Session, joinedload
 from sqlalchemy import or_
 from typing import Optional, List
 import os, uuid, aiofiles
+import cloudinary
+import cloudinary.uploader
 from ..database import get_db
 from .. import models, schemas
 from ..auth import get_current_user
 from ..config import settings
+
+if settings.cloudinary_url:
+    cloudinary.config(cloudinary_url=settings.cloudinary_url)
 
 router = APIRouter(prefix="/api/anunturi", tags=["anunturi"])
 
@@ -142,18 +147,25 @@ async def upload_poza(
     if not anunt or anunt.proprietar_id != current_user.id:
         raise HTTPException(status_code=403, detail="Acces interzis")
 
-    upload_dir = os.path.join(settings.upload_dir, str(anunt_id))
-    os.makedirs(upload_dir, exist_ok=True)
+    content = await file.read()
 
-    ext = os.path.splitext(file.filename)[1].lower()
-    filename = f"{uuid.uuid4()}{ext}"
-    filepath = os.path.join(upload_dir, filename)
-
-    async with aiofiles.open(filepath, 'wb') as f:
-        content = await file.read()
-        await f.write(content)
-
-    url = f"/uploads/{anunt_id}/{filename}"
+    if settings.cloudinary_url:
+        result = cloudinary.uploader.upload(
+            content,
+            folder=f"imofree/{anunt_id}",
+            public_id=str(uuid.uuid4()),
+        )
+        url = result["secure_url"]
+        filename = result["public_id"]
+    else:
+        upload_dir = os.path.join("uploads", str(anunt_id))
+        os.makedirs(upload_dir, exist_ok=True)
+        ext = os.path.splitext(file.filename)[1].lower()
+        filename = f"{uuid.uuid4()}{ext}"
+        filepath = os.path.join(upload_dir, filename)
+        async with aiofiles.open(filepath, 'wb') as f:
+            await f.write(content)
+        url = f"/uploads/{anunt_id}/{filename}"
 
     if este_principala:
         db.query(models.PozaAnunt).filter(
