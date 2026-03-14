@@ -3,7 +3,7 @@ export type TipTranzactie = 'vanzare' | 'inchiriere';
 export type StatusAnunt = 'draft' | 'activ' | 'inactiv' | 'vandut';
 
 export interface User {
-  id: number;
+  id: string;
   email: string;
   nume: string;
   prenume: string;
@@ -46,7 +46,7 @@ export interface Anunt {
   dosar_verificat: boolean;
   vizualizari: number;
   este_promovat: boolean;
-  proprietar_id: number;
+  proprietar_id: string;
   created_at: string;
   poze: Poza[];
   proprietar?: User;

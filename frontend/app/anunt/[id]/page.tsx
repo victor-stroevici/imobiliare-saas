@@ -6,8 +6,6 @@ import { Anunt } from '@/lib/types';
 import { useAuth } from '@/lib/auth-context';
 import Link from 'next/link';
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
-
 const TIP_LABELS: Record<string, string> = {
   apartament: 'Apartament', casa: 'Casă', teren: 'Teren',
   spatiu_comercial: 'Spațiu comercial', garsoniera: 'Garsonieră', industrial: 'Industrial'
@@ -74,7 +72,7 @@ export default function AnuntPage() {
           <div className="rounded-2xl overflow-hidden bg-gray-100 mb-4">
             {anunt.poze.length > 0 ? (
               <img
-                src={`${API_URL}${anunt.poze[poza]?.url}`}
+                src={anunt.poze[poza]?.url}
                 alt={anunt.titlu}
                 className="w-full h-72 md:h-96 object-cover"
               />
@@ -92,7 +90,7 @@ export default function AnuntPage() {
               {anunt.poze.map((p, i) => (
                 <img
                   key={p.id}
-                  src={`${API_URL}${p.url}`}
+                  src={p.url}
                   alt=""
                   onClick={() => setPoza(i)}
                   className={`w-20 h-16 object-cover rounded-lg cursor-pointer flex-shrink-0 ${i === poza ? 'ring-2 ring-green-500' : 'opacity-70 hover:opacity-100'}`}

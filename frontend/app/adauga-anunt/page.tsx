@@ -5,7 +5,6 @@ import { useAuth } from '@/lib/auth-context';
 import { api } from '@/lib/api';
 import Link from 'next/link';
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
 
 interface Message { role: 'user' | 'assistant'; content: string; }
 
@@ -95,7 +94,7 @@ export default function AdaugaAnuntPage() {
         const formData = new FormData();
         formData.append('file', poza);
         const token = localStorage.getItem('token');
-        await fetch(`${API_URL}/api/anunturi/${anunt.id}/poze`, {
+        await fetch(`/api/anunturi/${anunt.id}/poze`, {
           method: 'POST',
           headers: { 'Authorization': `Bearer ${token}` },
           body: formData

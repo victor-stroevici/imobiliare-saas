@@ -1,7 +1,6 @@
 'use client';
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { User } from './types';
-import { api } from './api';
 
 interface AuthContextType {
   user: User | null;
@@ -31,23 +30,45 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const savedToken = localStorage.getItem('token');
     if (savedToken) {
       setToken(savedToken);
-      api.get('/api/auth/me').then(setUser).catch(() => {
-        localStorage.removeItem('token');
-      }).finally(() => setLoading(false));
+      fetch('/api/auth/me', {
+        headers: { 'Authorization': `Bearer ${savedToken}` }
+      })
+        .then(r => r.ok ? r.json() : null)
+        .then(data => { if (data) setUser(data); else localStorage.removeItem('token'); })
+        .catch(() => localStorage.removeItem('token'))
+        .finally(() => setLoading(false));
     } else {
       setLoading(false);
     }
   }, []);
 
   const login = async (email: string, password: string) => {
-    const data = await api.post('/api/auth/login', { email, password });
+    const res = await fetch('/api/auth/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password })
+    });
+    if (!res.ok) {
+      const err = await res.json();
+      throw new Error(err.detail || err.error || 'Eroare autentificare');
+    }
+    const data = await res.json();
     localStorage.setItem('token', data.access_token);
     setToken(data.access_token);
     setUser(data.user);
   };
 
   const register = async (registerData: RegisterData) => {
-    const data = await api.post('/api/auth/register', registerData);
+    const res = await fetch('/api/auth/register', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(registerData)
+    });
+    if (!res.ok) {
+      const err = await res.json();
+      throw new Error(err.detail || err.error || 'Eroare înregistrare');
+    }
+    const data = await res.json();
     localStorage.setItem('token', data.access_token);
     setToken(data.access_token);
     setUser(data.user);
